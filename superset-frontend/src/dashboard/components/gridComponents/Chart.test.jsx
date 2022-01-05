@@ -61,6 +61,7 @@ describe('Chart', () => {
     addSuccessToast() {},
     addDangerToast() {},
     exportCSV() {},
+    exportXLSX() {},
     exportFullCSV() {},
     exportXLSX() {},
     exportFullXLSX() {},

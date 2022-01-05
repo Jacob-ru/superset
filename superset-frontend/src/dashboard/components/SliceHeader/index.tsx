@@ -273,6 +273,7 @@ const SliceHeader: FC<SliceHeaderProps> = ({
                 logExploreChart={logExploreChart}
                 logEvent={logEvent}
                 exportCSV={exportCSV}
+                exportXLSX={exportXLSX}
                 exportFullCSV={exportFullCSV}
                 exportXLSX={exportXLSX}
                 exportFullXLSX={exportFullXLSX}
