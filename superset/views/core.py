@@ -67,7 +67,8 @@ from superset.connectors.sqla.models import (
     TableColumn,
 )
 from superset.constants import QUERY_EARLY_CANCEL_KEY
-from superset.dashboards.commands.importers.v0 import ImportDashboardsCommand
+from superset.dashboards.commands.importers.v0 import \
+    ImportDashboardsCommand, MedbiImportDashboardsCommand
 from superset.dashboards.dao import DashboardDAO
 from superset.dashboards.permalink.commands.get import GetDashboardPermalinkCommand
 from superset.dashboards.permalink.exceptions import DashboardPermalinkGetFailedError
@@ -742,6 +743,58 @@ class Superset(BaseSupersetView):  # pylint: disable=too-many-public-methods
         databases = db.session.query(Database).all()
         return self.render_template(
             "superset/import_dashboards.html", databases=databases
+        )
+
+    @has_access
+    @event_logger.log_this
+    @expose("/medbi_import_dashboards/", methods=["GET", "POST"])
+    def import_dashboards(self) -> FlaskResponse:
+        """Overrides the dashboards using json instances from the file."""
+        import_file = request.files.get("file")
+        if request.method == "POST" and import_file:
+            success = False
+            database_id = request.form.get("db_id")
+            clickhouse_database_id = request.form.get("ch_db_id")
+            try:
+                MedbiImportDashboardsCommand(
+                    {import_file.filename: import_file.read()},
+                    database_id,
+                    clickhouse_database_id
+                ).run()
+                success = True
+            except DatabaseNotFound as ex:
+                logger.exception(ex)
+                flash(
+                    _(
+                        "Cannot import dashboard: %(db_error)s.\n"
+                        "Make sure to create the database before "
+                        "importing the dashboard.",
+                        db_error=ex,
+                    ),
+                    "danger",
+                )
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.exception(ex)
+                flash(
+                    _(
+                        "An unknown error occurred. "
+                        "Please contact your Superset administrator"
+                    ),
+                    "danger",
+                )
+            if success:
+                flash("Dashboard(s) have been imported", "success")
+                return redirect("/dashboard/list/")
+
+        databases = db.session.query(Database)\
+            .filter(~Database.sqlalchemy_uri.like('clickhouse+native%')).all()
+        clickhouse_databases = db.session.query(Database)\
+            .filter(Database.sqlalchemy_uri.like('clickhouse+native%'))\
+            .all()
+        return self.render_template(
+            "superset/medbi_import_dashboards.html",
+            databases=databases,
+            clickhouse_databases=clickhouse_databases
         )
 
     @staticmethod
