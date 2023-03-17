@@ -147,3 +147,116 @@ class ImportDashboardsCommand(ImportModelsCommand):
             for (dashboard_id, chart_id) in dashboard_chart_ids
         ]
         session.execute(dashboard_slices.insert(), values)
+
+
+class MedbiImportDashboardsCommand(ImportModelsCommand):
+
+    """Import dashboards"""
+
+    dao = DashboardDAO
+    model_name = "dashboard"
+    prefix = "dashboards/"
+    schemas: Dict[str, Schema] = {
+        "charts/": ImportV1ChartSchema(),
+        "dashboards/": ImportV1DashboardSchema(),
+        "datasets/": ImportV1DatasetSchema(),
+        "databases/": ImportV1DatabaseSchema(),
+    }
+    import_error = DashboardImportError
+
+    def __init__(self, contents, postgres_database_id: int, clickhouse_database_id: int, **kwargs):
+        self.postgres_database_id = postgres_database_id
+        self.clickhouse_database_id = clickhouse_database_id
+        super(MedbiImportDashboardsCommand, self).__init__(contents, **kwargs)
+
+    # pylint: disable=too-many-branches, too-many-locals
+    def _import(
+        self,
+        session: Session,
+        configs: Dict[str, Any],
+        overwrite: bool = False
+    ) -> None:
+        # discover charts and datasets associated with dashboards
+        chart_uuids: Set[str] = set()
+        dataset_uuids: Set[str] = set()
+        for file_name, config in configs.items():
+            if file_name.startswith("dashboards/"):
+                chart_uuids.update(find_chart_uuids(config["position"]))
+                dataset_uuids.update(
+                    find_native_filter_datasets(config.get("metadata", {}))
+                )
+
+        # discover datasets associated with charts
+        for file_name, config in configs.items():
+            if file_name.startswith("charts/") and config["uuid"] in chart_uuids:
+                dataset_uuids.add(config["dataset_uuid"])
+
+        # discover databases associated with datasets
+        database_uuids: Set[str] = set()
+        for file_name, config in configs.items():
+            if file_name.startswith("datasets/") and config["uuid"] in dataset_uuids:
+                database_uuids.add(config["database_uuid"])
+
+        # import related databases
+        database_ids: Dict[str, int] = {}
+        for file_name, config in configs.items():
+            if file_name.startswith("databases/") and config["uuid"] in database_uuids:
+                is_clickhouse = 'clickhouse' in config['sqlalchemy_uri']
+                database_ids[config['uuid']] = self.clickhouse_database_id \
+                    if is_clickhouse else self.postgres_database_id
+        assert len(database_ids) == 2
+
+        # import datasets with the correct parent ref
+        dataset_info: Dict[str, Dict[str, Any]] = {}
+        for file_name, config in configs.items():
+            if (
+                file_name.startswith("datasets/")
+                and config["database_uuid"] in database_ids
+            ):
+                config["database_id"] = database_ids[config["database_uuid"]]
+                origin_uuid = config['uuid']
+                dataset = import_dataset(session, config, overwrite=True)
+                dataset_info[origin_uuid] = {
+                    "datasource_id": dataset.id,
+                    "datasource_type": dataset.datasource_type,
+                    "datasource_name": dataset.table_name,
+                }
+
+        # import charts with the correct parent ref
+        chart_ids: Dict[str, int] = {}
+        for file_name, config in configs.items():
+            if (
+                file_name.startswith("charts/")
+                and config["dataset_uuid"] in dataset_info
+            ):
+                # update datasource id, type, and name
+                origin_uuid = config['uuid']
+                config.update(dataset_info[config["dataset_uuid"]])
+                chart = import_chart(session, config, overwrite=True)
+                chart_ids[origin_uuid] = chart.id
+
+        # store the existing relationship between dashboards and charts
+        existing_relationships = session.execute(
+            select([dashboard_slices.c.dashboard_id, dashboard_slices.c.slice_id])
+        ).fetchall()
+
+        # import dashboards
+        dashboard_chart_ids: List[Tuple[int, int]] = []
+        for file_name, config in configs.items():
+            if file_name.startswith("dashboards/"):
+                config = update_id_refs(config, chart_ids, dataset_info)
+
+                dashboard = import_dashboard(session, config, overwrite=overwrite)
+                for uuid in find_chart_uuids(config["position"]):
+                    if uuid not in chart_ids:
+                        break
+                    chart_id = chart_ids[uuid]
+                    if (dashboard.id, chart_id) not in existing_relationships:
+                        dashboard_chart_ids.append((dashboard.id, chart_id))
+
+        # set ref in the dashboard_slices table
+        values = [
+            {"dashboard_id": dashboard_id, "slice_id": chart_id}
+            for (dashboard_id, chart_id) in dashboard_chart_ids
+        ]
+        session.execute(dashboard_slices.insert(), values)

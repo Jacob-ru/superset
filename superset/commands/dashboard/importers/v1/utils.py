@@ -17,7 +17,8 @@
 
 import json
 import logging
-from typing import Any
+from uuid import uuid4
+from typing import Any, Dict, Set
 
 from flask import g
 from sqlalchemy.orm import Session
@@ -156,6 +157,14 @@ def import_dashboard(
         "Dashboard",
     )
     existing = session.query(Dashboard).filter_by(uuid=config["uuid"]).first()
+    if existing.created_by_fk != g.user.id:
+        existing = session.query(Dashboard).filter_by(dashboard_title=config['dashboard_title'],
+                                                      created_by_fk=g.user.id).first()
+        if not existing:
+            config['uuid'] = str(uuid4())
+        else:
+            config['uuid'] = str(existing.uuid)
+
     if existing:
         if not overwrite or not can_write:
             return existing

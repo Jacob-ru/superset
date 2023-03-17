@@ -18,9 +18,9 @@ import gzip
 import json
 import logging
 import re
-from typing import Any
+from typing import Any, Dict, Optional
 from urllib import request
-
+from uuid import uuid4
 import pandas as pd
 from flask import current_app, g
 from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, String, Text
@@ -112,7 +112,20 @@ def import_dataset(
         "can_write",
         "Dataset",
     )
+    database_id = config.get('database_id')
     existing = session.query(SqlaTable).filter_by(uuid=config["uuid"]).first()
+
+    # TODO (betodealmeida): move this logic to import_from_dict
+    config = config.copy()
+
+    if existing:
+        if database_id and existing.database_id != database_id:
+            existing = session.query(SqlaTable).filter_by(database_id=database_id,
+                                                          table_name=config['table_name']).first()
+            if not existing:
+                config['uuid'] = str(uuid4())
+            else:
+                config['uuid'] = str(existing.uuid)
     if existing:
         if not overwrite or not can_write:
             return existing
@@ -122,8 +135,6 @@ def import_dataset(
             "Dataset doesn't exist and user doesn't have permission to create datasets"
         )
 
-    # TODO (betodealmeida): move this logic to import_from_dict
-    config = config.copy()
     for key in JSON_KEYS:
         if config.get(key) is not None:
             try:
@@ -148,6 +159,10 @@ def import_dataset(
     data_uri = config.get("data")
 
     # import recursively to include columns and metrics
+    database = session.query(Database).filter(Database.id == database_id).one()
+    if database.data['backend'] == 'clickhouse':
+        schema_name = re.search(r'data_(\d+)', database.sqlalchemy_uri).group()
+        config['schema'] = schema_name
     try:
         dataset = SqlaTable.import_from_dict(session, config, recursive=True, sync=sync)
     except MultipleResultsFound:

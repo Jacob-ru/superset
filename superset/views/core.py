@@ -67,7 +67,7 @@ from superset.connectors.sqla.models import (
 )
 from superset.constants import QUERY_EARLY_CANCEL_KEY
 from superset.dashboards.commands.importers.v0 import \
-    ImportDashboardsCommand, MedbiImportDashboardsCommand
+    ImportDashboardsCommand
 from superset.dashboards.dao import DashboardDAO
 from superset.dashboards.permalink.commands.get import GetDashboardPermalinkCommand
 from superset.dashboards.permalink.exceptions import DashboardPermalinkGetFailedError
@@ -406,16 +406,26 @@ class Superset(BaseSupersetView):  # pylint: disable=too-many-public-methods
     @expose("/medbi_import_dashboards/", methods=["GET", "POST"])
     def import_dashboards(self) -> FlaskResponse:
         """Overrides the dashboards using json instances from the file."""
+        from superset.dashboards.commands.importers.v1 import \
+            MedbiImportDashboardsCommand
+        from superset.commands.importers.v1.utils import get_contents_from_bundle
+        from zipfile import ZipFile
+
         import_file = request.files.get("file")
         if request.method == "POST" and import_file:
             success = False
-            database_id = request.form.get("db_id")
-            clickhouse_database_id = request.form.get("ch_db_id")
+            database_id = int(request.form["db_id"])
+            clickhouse_database_id = int(request.form["ch_db_id"])
+
+            with ZipFile(import_file) as bundle:
+                contents = get_contents_from_bundle(bundle)
+
             try:
                 MedbiImportDashboardsCommand(
-                    {import_file.filename: import_file.read()},
+                    contents,
                     database_id,
-                    clickhouse_database_id
+                    clickhouse_database_id,
+                    overwrite=True
                 ).run()
                 success = True
             except DatabaseNotFound as ex:

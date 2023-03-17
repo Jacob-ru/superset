@@ -100,6 +100,9 @@ def validate_json_metadata(value: Union[bytes, bytearray, str]) -> None:
         value_obj = json.loads(value)
     except json.decoder.JSONDecodeError as ex:
         raise ValidationError("JSON not valid") from ex
+    # Костыль
+    if 'show_native_filters' in value_obj:
+        value_obj.pop('show_native_filters')
     errors = DashboardJSONMetadataSchema().validate(value_obj, partial=False)
     if errors:
         raise ValidationError(errors)
