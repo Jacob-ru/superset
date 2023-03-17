@@ -17,7 +17,7 @@
 
 from collections.abc import Iterator
 from datetime import datetime, timezone
-
+from typing import Tuple
 import yaml
 from flask_appbuilder import Model
 
@@ -43,9 +43,13 @@ class ExportModelsCommand(BaseCommand):
     @staticmethod
     def _export(model: Model, export_related: bool = True) -> Iterator[tuple[str, str]]:
         raise NotImplementedError("Subclasses MUST implement _export")
-
-    def run(self) -> Iterator[tuple[str, str]]:
-        self.validate()
+    def run(self) -> Iterator[Tuple[str, str]]:
+        try:
+            self.validate()
+        except self.not_found:
+            model_ids = [x.id for x in self._models]
+            if len(self._models) != len(self.model_ids):
+                self.model_ids = model_ids
 
         metadata = {
             "version": EXPORT_VERSION,
