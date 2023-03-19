@@ -28,7 +28,6 @@ from superset.commands.dashboard.importers.v1.utils import (
     find_chart_uuids,
     find_native_filter_datasets,
     import_dashboard,
-    update_id_refs,
 )
 from superset.commands.database.importers.v1.utils import import_database
 from superset.commands.dataset.importers.v1.utils import import_dataset
@@ -178,6 +177,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
     ) -> None:
         # discover charts and datasets associated with dashboards
         chart_uuids: Set[str] = set()
+        chart_uuids_map: Dict[str, str] = {}
         dataset_uuids: Set[str] = set()
         for file_name, config in configs.items():
             if file_name.startswith("dashboards/"):
@@ -234,23 +234,32 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
                 config.update(dataset_info[config["dataset_uuid"]])
                 chart = import_chart(session, config, overwrite=True)
                 chart_ids[origin_uuid] = chart.id
-
-        # store the existing relationship between dashboards and charts
-        existing_relationships = session.execute(
-            select([dashboard_slices.c.dashboard_id, dashboard_slices.c.slice_id])
-        ).fetchall()
+                chart_uuids_map[origin_uuid] = chart.uuid
 
         # import dashboards
         dashboard_chart_ids: List[Tuple[int, int]] = []
         for file_name, config in configs.items():
             if file_name.startswith("dashboards/"):
-                config = update_id_refs(config, chart_ids, dataset_info)
 
-                dashboard = import_dashboard(session, config, overwrite=overwrite)
+                rel_chart_ids = set()
                 for uuid in find_chart_uuids(config["position"]):
                     if uuid not in chart_ids:
                         break
                     chart_id = chart_ids[uuid]
+                    rel_chart_ids.add(chart_id)
+
+                config = update_id_refs(config, chart_ids, chart_uuids_map, dataset_info)
+
+                dashboard = import_dashboard(session, config, overwrite=overwrite)
+
+                # store the existing relationship between dashboards and charts
+                existing_relationships = session.execute(
+                    select(
+                        [dashboard_slices.c.dashboard_id, dashboard_slices.c.slice_id])
+                        .filter(dashboard_slices.c.dashboard_id==dashboard.id)
+                ).fetchall()
+
+                for chart_id in rel_chart_ids:
                     if (dashboard.id, chart_id) not in existing_relationships:
                         dashboard_chart_ids.append((dashboard.id, chart_id))
 
@@ -260,3 +269,96 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
             for (dashboard_id, chart_id) in dashboard_chart_ids
         ]
         session.execute(dashboard_slices.insert(), values)
+
+
+def update_id_refs(  # pylint: disable=too-many-locals
+    config: Dict[str, Any],
+    chart_ids: Dict[str, int],
+    chart_uuids: Dict[str, str],
+    dataset_info: Dict[str, Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Update dashboard metadata to use new IDs"""
+    import json
+
+    from .utils import  build_uuid_to_id_map
+    fixed = config.copy()
+
+    # build map old_id => new_id
+    old_ids = build_uuid_to_id_map(fixed["position"])
+    id_map = {
+        old_id: chart_ids[uuid] for uuid, old_id in old_ids.items() if uuid in chart_ids
+    }
+
+    # fix metadata
+    metadata = fixed.get("metadata", {})
+    if "timed_refresh_immune_slices" in metadata:
+        metadata["timed_refresh_immune_slices"] = [
+            id_map[old_id] for old_id in metadata["timed_refresh_immune_slices"]
+        ]
+
+    if "filter_scopes" in metadata:
+        # in filter_scopes the key is the chart ID as a string; we need to update
+        # them to be the new ID as a string:
+        metadata["filter_scopes"] = {
+            str(id_map[int(old_id)]): columns
+            for old_id, columns in metadata["filter_scopes"].items()
+            #if int(old_id) in id_map
+        }
+
+        # now update columns to use new IDs:
+        for columns in metadata["filter_scopes"].values():
+            for attributes in columns.values():
+                attributes["immune"] = [
+                    id_map[old_id]
+                    for old_id in attributes["immune"]
+                    #if old_id in id_map
+                ]
+
+    if "expanded_slices" in metadata:
+        metadata["expanded_slices"] = {
+            str(id_map[int(old_id)]): value
+            for old_id, value in metadata["expanded_slices"].items()
+        }
+
+    if "default_filters" in metadata:
+        default_filters = json.loads(metadata["default_filters"])
+        metadata["default_filters"] = json.dumps(
+            {
+                str(id_map[int(old_id)]): value
+                for old_id, value in default_filters.items()
+                #if int(old_id) in id_map
+            }
+        )
+
+    # fix position
+    position = fixed.get("position", {})
+    for child in position.values():
+        if (
+            isinstance(child, dict)
+            and child["type"] == "CHART"
+            and "uuid" in child["meta"]
+        ):
+            try:
+                child["meta"]["chartId"] = chart_ids[child["meta"]["uuid"]]
+                child["meta"]["uuid"] = chart_uuids[child["meta"]["uuid"]]
+            except Exception as e:
+                pass
+
+    # fix native filter references
+    native_filter_configuration = fixed.get("metadata", {}).get(
+        "native_filter_configuration", []
+    )
+    for native_filter in native_filter_configuration:
+        targets = native_filter.get("targets", [])
+        for target in targets:
+            dataset_uuid = target.pop("datasetUuid", None)
+            if dataset_uuid:
+                target["datasetId"] = dataset_info[dataset_uuid]["datasource_id"]
+
+        scope_excluded = native_filter.get("scope", {}).get("excluded", [])
+        if scope_excluded:
+            native_filter["scope"]["excluded"] = [
+                id_map[old_id] for old_id in scope_excluded if old_id in id_map
+            ]
+
+    return fixed
