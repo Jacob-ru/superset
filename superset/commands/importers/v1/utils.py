@@ -141,7 +141,6 @@ def load_configs(
         if schema:
             try:
                 config = load_yaml(file_name, content)
-
                 # populate passwords from the request or from existing DBs
                 if file_name in passwords:
                     config["password"] = passwords[file_name]
@@ -184,8 +183,12 @@ def load_configs(
                         "private_key_password"
                     ] = db_ssh_tunnel_priv_key_passws[config["uuid"]]
 
+                # Костыль при импорте датасета с шаблонами
+                if 'template_params' in config:
+                    config['template_params'] = config['template_params'] or {}
                 schema.load(config)
                 configs[file_name] = config
+
             except ValidationError as exc:
                 exc.messages = {file_name: exc.messages}
                 exceptions.append(exc)
