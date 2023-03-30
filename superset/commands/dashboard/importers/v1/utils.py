@@ -157,7 +157,7 @@ def import_dashboard(
         "Dashboard",
     )
     existing = session.query(Dashboard).filter_by(uuid=config["uuid"]).first()
-    if existing.created_by_fk != g.user.id:
+    if existing and existing.created_by_fk != g.user.id:
         existing = session.query(Dashboard).filter_by(dashboard_title=config['dashboard_title'],
                                                       created_by_fk=g.user.id).first()
         if not existing:

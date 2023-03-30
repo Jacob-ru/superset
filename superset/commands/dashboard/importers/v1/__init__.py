@@ -204,7 +204,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
                 is_clickhouse = 'clickhouse' in config['sqlalchemy_uri']
                 database_ids[config['uuid']] = self.clickhouse_database_id \
                     if is_clickhouse else self.postgres_database_id
-        assert len(database_ids) == 2
+        assert len(database_ids) <= 2
 
         # import datasets with the correct parent ref
         dataset_info: Dict[str, Dict[str, Any]] = {}
