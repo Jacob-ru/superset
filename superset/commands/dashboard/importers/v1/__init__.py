@@ -179,6 +179,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
         chart_uuids: Set[str] = set()
         chart_uuids_map: Dict[str, str] = {}
         dataset_uuids: Set[str] = set()
+
         for file_name, config in configs.items():
             if file_name.startswith("dashboards/"):
                 chart_uuids.update(find_chart_uuids(config["position"]))
@@ -244,7 +245,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
                 rel_chart_ids = set()
                 for uuid in find_chart_uuids(config["position"]):
                     if uuid not in chart_ids:
-                        break
+                        continue
                     chart_id = chart_ids[uuid]
                     rel_chart_ids.add(chart_id)
 
@@ -256,7 +257,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
                 existing_relationships = session.execute(
                     select(
                         [dashboard_slices.c.dashboard_id, dashboard_slices.c.slice_id])
-                        .filter(dashboard_slices.c.dashboard_id==dashboard.id)
+                        .filter(dashboard_slices.c.dashboard_id == dashboard.id)
                 ).fetchall()
 
                 for chart_id in rel_chart_ids:

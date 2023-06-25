@@ -410,6 +410,7 @@ class Superset(BaseSupersetView):  # pylint: disable=too-many-public-methods
             MedbiImportDashboardsCommand
         from superset.commands.importers.v1.utils import get_contents_from_bundle
         from zipfile import ZipFile
+        from superset.databases.filters import DatabaseFilter
 
         import_file = request.files.get("file")
         if request.method == "POST" and import_file:
@@ -452,9 +453,13 @@ class Superset(BaseSupersetView):  # pylint: disable=too-many-public-methods
                 flash("Dashboard(s) have been imported", "success")
                 return redirect("/dashboard/list/")
 
-        databases = db.session.query(Database)\
+        base_db_query = db.session.query(Database)
+        base_db_query = DatabaseFilter("id", SQLAInterface(Database, db.session))\
+            .apply(base_db_query, None)
+
+        databases = base_db_query\
             .filter(~Database.sqlalchemy_uri.like('clickhouse+native%')).all()
-        clickhouse_databases = db.session.query(Database)\
+        clickhouse_databases = base_db_query\
             .filter(Database.sqlalchemy_uri.like('clickhouse+native%'))\
             .all()
         return self.render_template(
