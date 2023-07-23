@@ -88,4 +88,9 @@ Handlebars.registerHelper('stringify', (obj: any, obj2: any) => {
   return isPlainObject(obj) ? JSON.stringify(obj) : String(obj);
 });
 
+//
+Handlebars.registerHelper('localeNumber', (number: any) =>
+  number.toLocaleString('ru-RU'),
+);
+
 Helpers.registerHelpers(Handlebars);
