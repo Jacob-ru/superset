@@ -93,4 +93,9 @@ Handlebars.registerHelper('localeNumber', (number: any) =>
   number.toLocaleString('ru-RU'),
 );
 
+Handlebars.registerHelper(
+  'toMillions',
+  (number: any) => `${(number / 1000000).toFixed(2)} млн.`,
+);
+
 Helpers.registerHelpers(Handlebars);
