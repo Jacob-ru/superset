@@ -98,4 +98,10 @@ Handlebars.registerHelper(
   (number: any) => `${(number / 1000000).toFixed(2)} млн.`,
 );
 
+Handlebars.registerHelper('toShortened', (number: any) => {
+  if (number >= 1000000) return `${(number / 1000000).toFixed(2)} млн.`;
+  if (number >= 1000) return `${(number / 1000).toFixed(2)} тыс.`;
+  return `${number.toFixed(2)}`;
+});
+
 Helpers.registerHelpers(Handlebars);
