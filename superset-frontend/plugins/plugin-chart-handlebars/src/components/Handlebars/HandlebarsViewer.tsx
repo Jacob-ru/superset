@@ -101,8 +101,7 @@ Handlebars.registerHelper(
 Handlebars.registerHelper('toShortened', (number: any) => {
   if (Math.abs(number) >= 1000000)
     return `${(number / 1000000).toFixed(2)} млн.`;
-  if (Math.abs(number) >= 1000)
-    return `${(number / 1000).toFixed(2)} тыс.`;
+  if (Math.abs(number) >= 1000) return `${(number / 1000).toFixed(2)} тыс.`;
   return `${number.toFixed(2)}`;
 });
 
