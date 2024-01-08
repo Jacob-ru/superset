@@ -184,6 +184,10 @@ def load_configs(
                         "private_key_password"
                     ] = db_ssh_tunnel_priv_key_passws[config["uuid"]]
 
+                # По невыясненной пока причине template_params может быть пустой строкой
+                # заменим на None
+                if config.get('template_params') == "":
+                    config['template_params'] = None
                 schema.load(config)
                 configs[file_name] = config
             except ValidationError as exc:

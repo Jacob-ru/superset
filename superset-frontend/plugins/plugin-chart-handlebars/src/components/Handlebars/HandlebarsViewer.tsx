@@ -88,4 +88,26 @@ Handlebars.registerHelper('stringify', (obj: any, obj2: any) => {
   return isPlainObject(obj) ? JSON.stringify(obj) : String(obj);
 });
 
+//
+Handlebars.registerHelper('localeNumber', (number: any) =>
+  number.toLocaleString('ru-RU'),
+);
+
+Handlebars.registerHelper(
+  'toMillions',
+  (number: any) => `${(number / 1000000).toFixed(2)} млн.`,
+);
+
+Handlebars.registerHelper('toShortened', (number: any) => {
+  if (Math.abs(number) >= 1000000)
+    return `${(number / 1000000).toFixed(2)} млн.`;
+  if (Math.abs(number) >= 1000) return `${(number / 1000).toFixed(2)} тыс.`;
+  return `${number.toFixed(2)}`;
+});
+
+Handlebars.registerHelper(
+  'toFixed',
+  (number: any, digits: number) => `${number.toFixed(digits)}`,
+);
+
 Helpers.registerHelpers(Handlebars);

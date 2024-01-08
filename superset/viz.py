@@ -32,7 +32,10 @@ from datetime import datetime, timedelta
 from itertools import product
 from typing import Any, cast, Optional, TYPE_CHECKING
 
-import geohash
+try:
+    import geohash
+except ImportError:
+    pass
 import numpy as np
 import pandas as pd
 import polyline
