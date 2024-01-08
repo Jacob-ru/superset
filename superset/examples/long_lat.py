@@ -17,7 +17,10 @@
 import datetime
 import random
 
-import geohash
+try:
+    import geohash
+except ImportError:
+    pass
 import pandas as pd
 from sqlalchemy import DateTime, Float, inspect, String
 

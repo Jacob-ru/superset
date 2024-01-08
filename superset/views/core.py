@@ -343,6 +343,74 @@ class Superset(BaseSupersetView):
         except SupersetException as ex:
             return json_error_response(utils.error_msg_from_exception(ex), 400)
 
+    @has_access
+    @event_logger.log_this
+    @expose("/medbi_import_dashboards/", methods=["GET", "POST"])
+    def import_dashboards(self) -> FlaskResponse:
+        """Overrides the dashboards using json instances from the file."""
+        from superset.commands.dashboard.importers.v1 import \
+            MedbiImportDashboardsCommand
+        from superset.commands.importers.v1.utils import get_contents_from_bundle
+        from zipfile import ZipFile
+        from superset.databases.filters import DatabaseFilter
+        from flask_appbuilder.models.sqla.interface import SQLAInterface
+
+        import_file = request.files.get("file")
+        if request.method == "POST" and import_file:
+            success = False
+            database_id = int(request.form["db_id"])
+            clickhouse_database_id = int(request.form["ch_db_id"])
+
+            with ZipFile(import_file) as bundle:
+                contents = get_contents_from_bundle(bundle)
+
+            try:
+                MedbiImportDashboardsCommand(
+                    contents,
+                    database_id,
+                    clickhouse_database_id,
+                    overwrite=True
+                ).run()
+                success = True
+            except DatabaseNotFound as ex:
+                logger.exception(ex)
+                flash(
+                    _(
+                        "Cannot import dashboard: %(db_error)s.\n"
+                        "Make sure to create the database before "
+                        "importing the dashboard.",
+                        db_error=ex,
+                    ),
+                    "danger",
+                )
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.exception(ex)
+                flash(
+                    _(
+                        "An unknown error occurred. "
+                        "Please contact your Superset administrator"
+                    ),
+                    "danger",
+                )
+            if success:
+                flash("Dashboard(s) have been imported", "success")
+                return redirect("/dashboard/list/")
+
+        base_db_query = db.session.query(Database)
+        base_db_query = DatabaseFilter("id", SQLAInterface(Database, db.session))\
+            .apply(base_db_query, None)
+
+        databases = base_db_query\
+            .filter(~Database.sqlalchemy_uri.like('clickhouse+native%')).all()
+        clickhouse_databases = base_db_query\
+            .filter(Database.sqlalchemy_uri.like('clickhouse+native%'))\
+            .all()
+        return self.render_template(
+            "superset/medbi_import_dashboards.html",
+            databases=databases,
+            clickhouse_databases=clickhouse_databases
+        )
+
     @staticmethod
     def get_redirect_url() -> str:
         """Assembles the redirect URL to the new endpoint. It also replaces

@@ -797,7 +797,10 @@ class ImportV1DatabaseSchema(Schema):
         uri = data["sqlalchemy_uri"]
         password = make_url_safe(uri).password
         if password == PASSWORD_MASK and data.get("password") is None:
-            raise ValidationError("Must provide a password for the database")
+            pass
+            # TODO при импорте в в1 может не быть пароля. По идее это не
+            #  ошибка так как загрузка все равно идет поверх другой базы
+            #raise ValidationError("Must provide a password for the database")
 
     @validates_schema
     def validate_ssh_tunnel_credentials(
