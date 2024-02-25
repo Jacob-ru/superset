@@ -48,6 +48,7 @@ from superset.commands.chart.exceptions import ChartNotFoundError
 from superset.commands.chart.warm_up_cache import ChartWarmUpCacheCommand
 from superset.commands.dashboard.exceptions import DashboardAccessDeniedError
 from superset.commands.dashboard.permalink.get import GetDashboardPermalinkCommand
+from superset.commands.database.exceptions import DatabaseNotFoundError
 from superset.commands.dataset.exceptions import DatasetNotFoundError
 from superset.commands.explore.form_data.create import CreateFormDataCommand
 from superset.commands.explore.form_data.get import GetFormDataCommand
@@ -372,7 +373,7 @@ class Superset(BaseSupersetView):
                     overwrite=True
                 ).run()
                 success = True
-            except DatabaseNotFound as ex:
+            except DatabaseNotFoundError as ex:
                 logger.exception(ex)
                 flash(
                     _(

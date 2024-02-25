@@ -18,7 +18,6 @@
 from typing import Any
 
 from marshmallow import Schema
-from sqlalchemy.orm import Session
 from sqlalchemy.sql import select
 
 from superset import db
@@ -185,7 +184,6 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
     # pylint: disable=too-many-branches, too-many-locals
     def _import(
         self,
-        session: Session,
         configs: dict[str, Any],
         overwrite: bool = False
     ) -> None:
@@ -230,7 +228,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
             ):
                 config["database_id"] = database_ids[config["database_uuid"]]
                 origin_uuid = config['uuid']
-                dataset = import_dataset(session, config, overwrite=True)
+                dataset = import_dataset(config, overwrite=True)
                 dataset_info[origin_uuid] = {
                     "datasource_id": dataset.id,
                     "datasource_type": dataset.datasource_type,
@@ -247,7 +245,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
                 # update datasource id, type, and name
                 origin_uuid = config['uuid']
                 config.update(dataset_info[config["dataset_uuid"]])
-                chart = import_chart(session, config, overwrite=True)
+                chart = import_chart(config, overwrite=True)
                 chart_ids[origin_uuid] = chart.id
                 chart_uuids_map[origin_uuid] = chart.uuid
 
@@ -265,10 +263,10 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
 
                 config = update_id_refs(config, chart_ids, chart_uuids_map, dataset_info)
 
-                dashboard = import_dashboard(session, config, overwrite=overwrite)
+                dashboard = import_dashboard(config, overwrite=overwrite)
 
                 # store the existing relationship between dashboards and charts
-                existing_relationships = session.execute(
+                existing_relationships = db.session.execute(
                     select(
                         [dashboard_slices.c.dashboard_id, dashboard_slices.c.slice_id])
                         .filter(dashboard_slices.c.dashboard_id == dashboard.id)
@@ -283,7 +281,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
             {"dashboard_id": dashboard_id, "slice_id": chart_id}
             for (dashboard_id, chart_id) in dashboard_chart_ids
         ]
-        session.execute(dashboard_slices.insert(), values)
+        db.session.execute(dashboard_slices.insert(), values)
 
 
 def update_id_refs(  # pylint: disable=too-many-locals

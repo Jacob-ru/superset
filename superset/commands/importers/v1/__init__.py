@@ -78,6 +78,7 @@ class ImportModelsCommand(BaseCommand):
             db.session.rollback()
             raise ex
         except Exception as ex:
+            raise ex
             db.session.rollback()
             raise self.import_error() from ex
 
