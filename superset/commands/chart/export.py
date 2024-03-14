@@ -84,3 +84,9 @@ class ExportChartsCommand(ExportModelsCommand):
 
         if model.table and export_related:
             yield from ExportDatasetsCommand([model.table.id]).run()
+
+    def validate(self) -> None:
+        self._models = self.dao.find_by_ids(self.model_ids)
+        if len(self._models) != len(self.model_ids):
+            found_ids = {x.id for x in self._models}
+            raise self.not_found(message=f"Not found charts for ids: {set(self.model_ids) - found_ids}")
