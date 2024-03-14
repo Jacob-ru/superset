@@ -402,9 +402,9 @@ class Superset(BaseSupersetView):
             .apply(base_db_query, None)
 
         databases = base_db_query\
-            .filter(~Database.sqlalchemy_uri.like('clickhouse+native%')).all()
+            .filter(~Database.sqlalchemy_uri.like('clickhouse%')).all()
         clickhouse_databases = base_db_query\
-            .filter(Database.sqlalchemy_uri.like('clickhouse+native%'))\
+            .filter(Database.sqlalchemy_uri.like('clickhouse%'))\
             .all()
         return self.render_template(
             "superset/medbi_import_dashboards.html",
