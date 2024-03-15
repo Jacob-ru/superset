@@ -103,6 +103,16 @@ def migrate_chart(config: dict[str, Any]) -> dict[str, Any]:
     }
 
     output = copy.deepcopy(config)
+
+    # also update `query_context`
+    try:
+        query_context = json.loads(output.get("query_context") or "{}")
+        if "datasource" in query_context:
+            query_context["datasource"]["id"] = config["datasource_id"]
+        output["query_context"] = json.dumps(query_context)
+    except (json.decoder.JSONDecodeError, TypeError):
+        pass
+
     if config["viz_type"] not in migrators:
         return output
 
@@ -121,13 +131,16 @@ def migrate_chart(config: dict[str, Any]) -> dict[str, Any]:
         }
     )
 
+
     # also update `query_context`
     try:
         query_context = json.loads(output.get("query_context") or "{}")
     except (json.decoder.JSONDecodeError, TypeError):
         query_context = {}
     if "form_data" in query_context:
-        query_context["form_data"] = output["params"]
+        query_context["form_data"] = json.loads(output["params"])
+        if "datasource" in query_context:
+            query_context["datasource"]["id"] = config["datasource_id"]
         output["query_context"] = json.dumps(query_context)
 
     return output
