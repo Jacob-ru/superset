@@ -256,6 +256,7 @@ class ImportV1DatasetSchema(Schema):
     fetch_values_predicate = fields.String(allow_none=True)
     extra = fields.Dict(allow_none=True)
     uuid = fields.UUID(required=True)
+    id = fields.Integer(required=False)
     columns = fields.List(fields.Nested(ImportV1ColumnSchema))
     metrics = fields.List(fields.Nested(ImportV1MetricSchema))
     version = fields.String(required=True)
