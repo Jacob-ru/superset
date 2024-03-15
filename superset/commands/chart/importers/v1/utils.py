@@ -64,7 +64,7 @@ def import_chart(
         if not overwrite or not can_write:
             return existing
         config["id"] = existing.id
-        config["uuid"] = existing.uuid
+        config["uuid"] = str(existing.uuid)
     elif not can_write:
         raise ImportFailedError(
             "Chart doesn't exist and user doesn't have permission to create charts"

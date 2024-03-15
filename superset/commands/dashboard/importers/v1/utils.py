@@ -154,7 +154,7 @@ def import_dashboard(
         "can_write",
         "Dashboard",
     )
-    existing_qs = db.session.query(Dashboard).filter_by(uuid=config["uuid"])
+    existing_qs = db.session.query(Dashboard).filter_by(dashboard_title=config["dashboard_title"])
     if created_by_fk:
         existing_qs = existing_qs.filter_by(created_by_fk=created_by_fk)
     existing = existing_qs.first()
@@ -168,6 +168,7 @@ def import_dashboard(
         elif not overwrite or not can_write:
             return existing
         config["id"] = existing.id
+        config["uuid"] = str(existing.uuid)
     elif not can_write:
         raise ImportFailedError(
             "Dashboard doesn't exist and user doesn't "

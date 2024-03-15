@@ -121,7 +121,7 @@ def import_dataset(
         if not overwrite or not can_write:
             return existing
         config["id"] = existing.id
-        config["uuid"] = existing.uuid
+        config["uuid"] = str(existing.uuid)
 
     elif not can_write:
         raise ImportFailedError(

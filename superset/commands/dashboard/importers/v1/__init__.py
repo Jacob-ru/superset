@@ -252,7 +252,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
                 config.update(dataset_info[config["dataset_uuid"]])
                 chart = import_chart(config, overwrite=True)
                 chart_ids[origin_uuid] = chart.id
-                chart_uuids_map[origin_uuid] = chart.uuid
+                chart_uuids_map[origin_uuid] = str(chart.uuid)
 
         # import dashboards
         dashboard_chart_ids: list[tuple[int, int]] = []
