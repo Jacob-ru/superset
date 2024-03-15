@@ -17,6 +17,7 @@
 
 import copy
 import json
+import uuid
 from inspect import isclass
 from typing import Any
 
@@ -49,7 +50,10 @@ def import_chart(
     ignore_permissions: bool = False,
 ) -> Slice:
     can_write = ignore_permissions or security_manager.can_access("can_write", "Chart")
-    existing = db.session.query(Slice).filter_by(uuid=config["uuid"]).first()
+    existing = db.session.query(Slice)\
+        .filter_by(uuid=config["uuid"],
+                   datasource_id=config["datasource_id"])\
+        .first()
     if existing:
         if overwrite and can_write and get_user():
             if not security_manager.can_access_chart(existing):
@@ -65,6 +69,8 @@ def import_chart(
             "Chart doesn't exist and user doesn't have permission to create charts"
         )
 
+    if not existing:
+        config['uuid'] = uuid.uuid4().hex
     filter_chart_annotations(config)
 
     # TODO (betodealmeida): move this logic to import_from_dict

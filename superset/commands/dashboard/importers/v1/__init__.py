@@ -30,6 +30,7 @@ from superset.commands.dashboard.importers.v1.utils import (
     import_dashboard,
     update_id_refs,
 )
+from superset.utils.core import get_user
 from superset.commands.database.importers.v1.utils import import_database
 from superset.commands.dataset.importers.v1.utils import import_dataset
 from superset.commands.importers.v1 import ImportModelsCommand
@@ -221,6 +222,7 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
 
         # import datasets with the correct parent ref
         dataset_info: dict[str, dict[str, Any]] = {}
+        dataset_old_ids_mapping: dict[int, str] = {}
         for file_name, config in configs.items():
             if (
                 file_name.startswith("datasets/")
@@ -228,11 +230,14 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
             ):
                 config["database_id"] = database_ids[config["database_uuid"]]
                 origin_uuid = config['uuid']
+                origin_id = config['id']
+                dataset_old_ids_mapping[origin_id] = origin_uuid
                 dataset = import_dataset(config, overwrite=True)
                 dataset_info[origin_uuid] = {
                     "datasource_id": dataset.id,
                     "datasource_type": dataset.datasource_type,
                     "datasource_name": dataset.table_name,
+                    "dataset_uuid": dataset.uuid
                 }
 
         # import charts with the correct parent ref
@@ -261,9 +266,11 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
                     chart_id = chart_ids[uuid]
                     rel_chart_ids.add(chart_id)
 
-                config = update_id_refs(config, chart_ids, chart_uuids_map, dataset_info)
+                config = update_id_refs(config, chart_ids, chart_uuids_map, dataset_info,
+                                        dataset_old_id_to_uuid_mapping=dataset_old_ids_mapping)
 
-                dashboard = import_dashboard(config, overwrite=overwrite)
+                user = get_user()
+                dashboard = import_dashboard(config, overwrite=overwrite, created_by_fk=user.id)
 
                 # store the existing relationship between dashboards and charts
                 existing_relationships = db.session.execute(
@@ -289,6 +296,7 @@ def update_id_refs(  # pylint: disable=too-many-locals
     chart_ids: dict[str, int],
     chart_uuids: dict[str, str],
     dataset_info: dict[str, dict[str, Any]],
+    dataset_old_id_to_uuid_mapping: dict[int, str] = None
 ) -> dict[str, Any]:
     """Update dashboard metadata to use new IDs"""
     import json
@@ -365,6 +373,10 @@ def update_id_refs(  # pylint: disable=too-many-locals
         targets = native_filter.get("targets", [])
         for target in targets:
             dataset_uuid = target.pop("datasetUuid", None)
+            if not dataset_uuid:
+                dataset_id = target.pop("datasetId", None)
+                if dataset_id and dataset_old_id_to_uuid_mapping:
+                    dataset_uuid = dataset_old_id_to_uuid_mapping[dataset_id]
             if dataset_uuid:
                 target["datasetId"] = dataset_info[dataset_uuid]["datasource_id"]
 

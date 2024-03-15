@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 import gzip
+import uuid
 import json
 import logging
 import re
@@ -111,7 +112,10 @@ def import_dataset(
         "can_write",
         "Dataset",
     )
-    existing = db.session.query(SqlaTable).filter_by(uuid=config["uuid"]).first()
+    existing = db.session.query(SqlaTable)\
+        .filter_by(uuid=config["uuid"],
+                   database_id=config["database_id"])\
+        .first()
     if existing:
         if not overwrite or not can_write:
             return existing
@@ -120,6 +124,9 @@ def import_dataset(
         raise ImportFailedError(
             "Dataset doesn't exist and user doesn't have permission to create datasets"
         )
+
+    if not existing:
+        config["uuid"] = uuid.uuid4().hex
 
     # TODO (betodealmeida): move this logic to import_from_dict
     config = config.copy()
