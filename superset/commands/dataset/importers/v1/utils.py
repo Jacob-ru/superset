@@ -112,14 +112,17 @@ def import_dataset(
         "can_write",
         "Dataset",
     )
+    database = db.session.query(Database).filter_by(id=config["database_id"]).first()
     existing = db.session.query(SqlaTable)\
-        .filter_by(uuid=config["uuid"],
+        .filter_by(table_name=config['table_name'],
                    database_id=config["database_id"])\
         .first()
     if existing:
         if not overwrite or not can_write:
             return existing
         config["id"] = existing.id
+        config["uuid"] = existing.uuid
+
     elif not can_write:
         raise ImportFailedError(
             "Dataset doesn't exist and user doesn't have permission to create datasets"
@@ -127,6 +130,9 @@ def import_dataset(
 
     if not existing:
         config["uuid"] = uuid.uuid4().hex
+
+    if database and 'clickhouse' in database.sqlalchemy_uri:
+        config['schema'] = database.url_object.database
 
     # TODO (betodealmeida): move this logic to import_from_dict
     config = config.copy()

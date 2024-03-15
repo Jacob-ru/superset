@@ -51,7 +51,7 @@ def import_chart(
 ) -> Slice:
     can_write = ignore_permissions or security_manager.can_access("can_write", "Chart")
     existing = db.session.query(Slice)\
-        .filter_by(uuid=config["uuid"],
+        .filter_by(slice_name=config["slice_name"],
                    datasource_id=config["datasource_id"])\
         .first()
     if existing:
@@ -64,6 +64,7 @@ def import_chart(
         if not overwrite or not can_write:
             return existing
         config["id"] = existing.id
+        config["uuid"] = existing.uuid
     elif not can_write:
         raise ImportFailedError(
             "Chart doesn't exist and user doesn't have permission to create charts"
