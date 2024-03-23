@@ -120,7 +120,7 @@ export function CustomFrame(props: FrameComponentProps) {
   // and will fall back to antd's default locale when the antd DataPicker's prop locale === undefined
   // This also protects us from the case where state is populated with a locale that antd locales does not recognize
   const datePickerLocale =
-    locales[LOCALE_MAPPING[localFromFlaskBabel]]?.DatePicker;
+    locales["ru_RU"]?.DatePicker;
 
   return (
     <div data-test="custom-frame">
