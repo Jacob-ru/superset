@@ -22,6 +22,8 @@ import { t } from '@superset-ui/core';
 import { Moment } from 'moment';
 import { isInteger } from 'lodash';
 // @ts-ignore
+import 'moment/locale/ru';
+// @ts-ignore
 import { locales } from 'antd/dist/antd-with-locales';
 import { Col, Row } from 'src/components';
 import { InputNumber } from 'src/components/Input';
