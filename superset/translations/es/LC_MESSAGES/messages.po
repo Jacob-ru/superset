@@ -20653,3 +20653,4 @@ msgstr "año"
 #: superset-frontend/plugins/plugin-chart-echarts/src/Timeseries/transformProps.ts:578
 msgid "zoom area"
 msgstr ""
+
