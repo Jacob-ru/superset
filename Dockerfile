@@ -143,7 +143,7 @@ COPY --chown=superset:superset --chmod=755 ./docker/*.sh /app/docker/
 CMD ["/app/docker/docker-ci.sh"]
 
 
-FROM lean as medbi
+FROM dev as medbi
 COPY ./docker/requirements-local.txt/ /app/requirements/
 RUN ls /app/requirements/
 RUN pip install -r /app/requirements/requirements-local.txt
