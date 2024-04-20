@@ -995,3 +995,44 @@ class Superset(BaseSupersetView):
     @deprecated(new_target="/sqllab/history")
     def sqllab_history(self) -> FlaskResponse:
         return redirect("/sqllab/history")
+
+    @expose("/dashboard/by-name/<dashboard_name>/")
+    @event_logger.log_this_with_extra_payload
+    def dashboard_by_name(
+        self,
+        dashboard_name: str,
+        add_extra_log_payload: Callable[..., None] = lambda **kwargs: None,
+    ) -> FlaskResponse:
+        """
+        Server side rendering for a dashboard.
+
+        :param dashboard_name: name for dashboard
+        :param add_extra_log_payload: added by `log_this_with_manual_updates`, set a
+            default value to appease pylint
+        """
+        from flask_appbuilder.models.sqla.interface import SQLAInterface
+        from superset.dashboards.filters import DashboardAccessFilter
+        from flask_appbuilder.models.sqla.filters import FilterEqual
+        datamodel = SQLAInterface(Dashboard, db.session)
+
+        # Getting dashboard suiting by name using list of allowed dashboards to access
+        base_filters = [
+            ["id", DashboardAccessFilter, lambda: []],
+            ["dashboard_title", FilterEqual, dashboard_name]
+        ]
+        filters = datamodel.get_filters()
+        filters.add_filter_list(base_filters)
+        count, dashboards = datamodel.query(filters)
+
+        if not dashboards:
+            abort(404)
+        dashboard = dashboards[0]
+        try:
+            dashboard.raise_for_access()
+        except SupersetSecurityException as ex:
+            return redirect_with_flash(
+                url="/dashboard/list/",
+                message=utils.error_msg_from_exception(ex),
+                category="danger",
+            )
+        return redirect(dashboard.url)
