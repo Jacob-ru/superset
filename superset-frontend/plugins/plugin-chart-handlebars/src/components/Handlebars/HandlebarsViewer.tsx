@@ -114,9 +114,33 @@ Handlebars.registerHelper('countTotalSum', (values: any, digits) => {
   let sum: number;
   sum = 0;
   Object.values(values).forEach(function (value: number) {
-    sum += value;
+    const isNumber = typeof value === 'number';
+
+    if (isNumber) {
+      sum += value;
+    }
   });
-  return sum.toFixed(digits);
+  const isNumber = typeof sum === 'number';
+  if (isNumber) {
+    return sum.toFixed(digits);
+  }
+  return `NotANumber(${sum})`;
 });
+
+Handlebars.registerHelper(
+  'countTotalListSum',
+  (values: any, fieldName: string, digits) => {
+    let sum: number;
+    sum = 0;
+    values.forEach(function (value: any, idx: number) {
+      sum += value[fieldName];
+    });
+    const isNumber = typeof sum === 'number';
+    if (isNumber) {
+      return sum.toFixed(digits);
+    }
+    return `NotANumber(${sum})`;
+  },
+);
 
 Helpers.registerHelpers(Handlebars);
