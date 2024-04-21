@@ -135,7 +135,7 @@ Handlebars.registerHelper(
     values.forEach(function (value: any, idx: number) {
       sum += value[fieldName];
     });
-    const isNumber = typeof sum === 'number';
+    const isNumber = (typeof sum) === 'number';
     if (isNumber) {
       return sum.toFixed(digits);
     }
