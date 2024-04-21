@@ -1013,6 +1013,7 @@ class Superset(BaseSupersetView):
         from flask_appbuilder.models.sqla.interface import SQLAInterface
         from superset.dashboards.filters import DashboardAccessFilter
         from flask_appbuilder.models.sqla.filters import FilterEqual
+        from flask import request
         datamodel = SQLAInterface(Dashboard, db.session)
 
         # Getting dashboard suiting by name using list of allowed dashboards to access
@@ -1027,6 +1028,27 @@ class Superset(BaseSupersetView):
         if not dashboards:
             abort(404)
         dashboard = dashboards[0]
+
+        dashboard_filters = []
+        for filter_name, filter_value in request.values.items():
+            # Search filter details by filter_name
+            filter_found = False
+            for filter_state in dashboard.data['metadata']['native_filter_configuration']:
+                if filter_state['name'] == filter_name:
+                    filter_id = filter_state['id']
+                    column_name = filter_state['targets'][0]['column']['name']
+                    dashboard_filters.append((filter_id, column_name, filter_value))
+                    filter_found = True
+                    break
+            if not filter_found:
+                raise Exception(f"Not found filter for name {filter_name}")
+
+        if dashboard_filters:
+            native_filters_param = _get_native_filter_values(dashboard_filters)
+            url = f"{dashboard.url}?{native_filters_param}"
+        else:
+            url = dashboard.url
+
         try:
             dashboard.raise_for_access()
         except SupersetSecurityException as ex:
@@ -1035,4 +1057,18 @@ class Superset(BaseSupersetView):
                 message=utils.error_msg_from_exception(ex),
                 category="danger",
             )
-        return redirect(dashboard.url)
+
+        return redirect(url)
+
+
+def _get_native_filter_values(filters):
+    filter_strings = []
+    for filter_id, column, value in filters:
+        filter_string = f"{filter_id}:(extraFormData:" \
+                        f"(filters:!((col:{column},op:IN,val:!('{value}'))))," \
+                        f"filterState:(label:'{value}'," \
+                        f"validateStatus:!f,value:!('{value}'))," \
+                        f"id:{filter_id},ownState:())"
+        filter_strings.append(filter_string)
+    native_filters = f"native_filters=({','.join(filter_strings)})"
+    return native_filters
