@@ -110,4 +110,13 @@ Handlebars.registerHelper(
   (number: any, digits: number) => `${number.toFixed(digits)}`,
 );
 
+Handlebars.registerHelper('countTotalSum', (values: any, digits) => {
+  let sum: number;
+  sum = 0;
+  Object.values(values).forEach(function (value: number) {
+    sum += value;
+  });
+  return sum.toFixed(digits);
+});
+
 Helpers.registerHelpers(Handlebars);
