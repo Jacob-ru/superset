@@ -2310,9 +2310,13 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
         return self.get_guest_user_from_token(cast(GuestToken, token))
 
     def get_guest_user_from_token(self, token: GuestToken) -> GuestUser:
+        # Для гостевого пользователя подхватываем роли пользователя,
+        # который указан в токене
+        user = self.get_user_by_username(token['user']['username'])
+        roles = self.get_user_roles(user)
         return self.guest_user_cls(
             token=token,
-            roles=[self.find_role(current_app.config["GUEST_ROLE_NAME"])],
+            roles=roles,
         )
 
     def parse_jwt_guest_token(self, raw_token: str) -> dict[str, Any]:

@@ -954,6 +954,9 @@ DEFAULT_HTTP_HEADERS: dict[str, Any] = {}
 OVERRIDE_HTTP_HEADERS: dict[str, Any] = {}
 HTTP_HEADERS: dict[str, Any] = {}
 
+# ENABLE_CORS = False
+# OVERRIDE_HTTP_HEADERS={"X-Frame-Options":"ALLOWALL"}
+
 # The db id here results in selecting this one as a default in SQL Lab
 DEFAULT_DB_ID = None
 
