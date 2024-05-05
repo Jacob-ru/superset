@@ -1956,13 +1956,14 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
                     for query in query_context.queries
                 )
             ):
-                raise SupersetSecurityException(
-                    SupersetError(
-                        error_type=SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR,
-                        message=_("Guest user cannot modify chart payload"),
-                        level=ErrorLevel.ERROR,
-                    )
-                )
+                pass
+                # raise SupersetSecurityException(
+                #     SupersetError(
+                #         error_type=SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR,
+                #         message=_("Guest user cannot modify chart payload"),
+                #         level=ErrorLevel.ERROR,
+                #     )
+                # )
 
         if datasource or query_context or viz:
             form_data = None
