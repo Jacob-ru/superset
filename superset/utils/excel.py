@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 import io
+from decimal import Decimal
 from typing import Any
 
 import pandas as pd
@@ -26,6 +27,13 @@ def df_to_excel(df: pd.DataFrame, **kwargs: Any) -> Any:
     # timezones are not supported
     for column in df.select_dtypes(include=["datetimetz"]).columns:
         df[column] = df[column].astype(str)
+
+    for column in df.select_dtypes(include=["object"]).columns:
+        def _decimal_to_float_with_comma_sep(v):
+            if isinstance(v, Decimal):
+                v = float(v)
+            return v
+        df[column] = df[column].map(_decimal_to_float_with_comma_sep)
 
     # pylint: disable=abstract-class-instantiated
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
