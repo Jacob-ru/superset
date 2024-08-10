@@ -17,6 +17,7 @@
 
 from typing import Any
 
+from collections import defaultdict
 from marshmallow import Schema
 from sqlalchemy.sql import select
 
@@ -207,9 +208,12 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
 
         # discover databases associated with datasets
         database_uuids: set[str] = set()
+        database_datasets_count = defaultdict(lambda: 0)
         for file_name, config in configs.items():
             if file_name.startswith("datasets/") and config["uuid"] in dataset_uuids:
-                database_uuids.add(config["database_uuid"])
+                database_uuid = config["database_uuid"]
+                database_uuids.add(database_uuid)
+                database_datasets_count[database_uuid] += 1
 
         # import related databases
         database_ids: dict[str, int] = {}
