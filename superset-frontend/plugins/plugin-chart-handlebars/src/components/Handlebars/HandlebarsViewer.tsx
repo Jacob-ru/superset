@@ -90,7 +90,7 @@ Handlebars.registerHelper('stringify', (obj: any, obj2: any) => {
 
 //
 Handlebars.registerHelper('localeNumber', (number: any) =>
-  number.toLocaleString('ru-RU'),
+  Number(number).toLocaleString('ru-RU'),
 );
 
 Handlebars.registerHelper(
