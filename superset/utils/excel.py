@@ -37,8 +37,8 @@ def df_to_excel(df: pd.DataFrame, from_date = None, to_date=None, **kwargs: Any)
 
     # pylint: disable=abstract-class-instantiated
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        if from_date or to_date:
-            period_text = f'Период: {from_date} - {to_date}'
+        if from_date and to_date:
+            period_text = f'Период: {from_date.date()} - {to_date.date()}'
         else:
             period_text = ""
         writer._write_cells(
