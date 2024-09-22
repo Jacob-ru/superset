@@ -571,7 +571,12 @@ class QueryContextProcessor:
                     df, index=include_index, **config["CSV_EXPORT"]
                 )
             elif self._query_context.result_format == ChartDataResultFormat.XLSX:
-                result = excel.df_to_excel(df, **config["EXCEL_EXPORT"])
+                from_date = self._query_context.queries[0].from_dttm
+                to_date = self._query_context.queries[0].to_dttm
+                result = excel.df_to_excel(df,
+                                           from_date=from_date,
+                                           to_date=to_date,
+                                           **config["EXCEL_EXPORT"])
             return result or ""
 
         return df.to_dict(orient="records")

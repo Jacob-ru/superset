@@ -17,11 +17,11 @@
 import io
 from decimal import Decimal
 from typing import Any
-
+from pandas.io.formats.excel import ExcelCell
 import pandas as pd
 
 
-def df_to_excel(df: pd.DataFrame, **kwargs: Any) -> Any:
+def df_to_excel(df: pd.DataFrame, from_date = None, to_date=None, **kwargs: Any) -> Any:
     output = io.BytesIO()
 
     # timezones are not supported
@@ -37,6 +37,14 @@ def df_to_excel(df: pd.DataFrame, **kwargs: Any) -> Any:
 
     # pylint: disable=abstract-class-instantiated
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, **kwargs)
+        if from_date or to_date:
+            period_text = f'Период: {from_date} - {to_date}'
+        else:
+            period_text = ""
+        writer._write_cells(
+            [ExcelCell(col=0, row=0, val=period_text)],
+            sheet_name="Sheet1"
+        )
+        df.to_excel(writer, startrow=1, **kwargs)
 
     return output.getvalue()
