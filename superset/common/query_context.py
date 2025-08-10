@@ -89,7 +89,7 @@ class QueryContext:
         self,
         df: pd.DataFrame,
     ) -> str | list[dict[str, Any]]:
-        return self._processor.get_data(df)
+        return self._processor.get_data(df, slice_name=self.slice_.slice_name)
 
     def get_payload(
         self,

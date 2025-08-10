@@ -21,7 +21,8 @@ from pandas.io.formats.excel import ExcelCell
 import pandas as pd
 
 
-def df_to_excel(df: pd.DataFrame, from_date = None, to_date=None, **kwargs: Any) -> Any:
+def df_to_excel(df: pd.DataFrame, from_date = None, to_date=None, slice_name: str = None,
+                **kwargs: Any) -> Any:
     output = io.BytesIO()
 
     # timezones are not supported
@@ -41,10 +42,12 @@ def df_to_excel(df: pd.DataFrame, from_date = None, to_date=None, **kwargs: Any)
             period_text = f'Период: {from_date.date()} - {to_date.date()}'
         else:
             period_text = ""
+        graph_name = f"График: {slice_name}"
         writer._write_cells(
-            [ExcelCell(col=0, row=0, val=period_text)],
+            [ExcelCell(col=0, row=0, val=period_text),
+                   ExcelCell(col=0, row=1, val=graph_name),],
             sheet_name="Sheet1"
         )
-        df.to_excel(writer, startrow=1, **kwargs)
+        df.to_excel(writer, startrow=2, **kwargs)
 
     return output.getvalue()
