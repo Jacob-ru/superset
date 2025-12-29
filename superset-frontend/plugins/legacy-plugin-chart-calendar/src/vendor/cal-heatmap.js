@@ -1983,7 +1983,22 @@ CalHeatMap.prototype = {
     if (typeof format === 'function') {
       return format(d);
     } else {
-      var f = d3.time.format(format);
+      // MEDBI: Локализация для русского языка в названии месяцев //
+      var ru_RU = {
+          "decimal": ",",
+          "thousands": "\xa0",
+          "grouping": [3],
+          "currency": ["", " руб."],
+          "dateTime": "%A, %e %B %Y г. %X",
+          "date": "%d.%m.%Y",
+          "time": "%H:%M:%S",
+          "periods": ["AM", "PM"],
+          "days": ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"],
+          "shortDays": ["вс", "пн", "вт", "ср", "чт", "пт", "сб"],
+          "months": ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
+          "shortMonths": ["Янв", "Фев", "Март", "Апр", "Май", "Июнь", "Июль", "Авг", "Сен", "Окт", "Нояб", "Дек"]
+      };
+      var f = d3.locale(ru_RU).timeFormat(format);
       return f(d);
     }
   },

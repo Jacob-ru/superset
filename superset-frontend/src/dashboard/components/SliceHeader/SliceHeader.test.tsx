@@ -157,6 +157,7 @@ const createProps = (overrides: any = {}) => ({
   logExploreChart: jest.fn(),
   logEvent: jest.fn(),
   exportCSV: jest.fn(),
+  exportXLSX: jest.fn(),
   formData: { slice_id: 1, datasource: '58__table' },
   width: 100,
   height: 100,

@@ -16,6 +16,7 @@
 # under the License.
 from __future__ import annotations
 
+import json
 from typing import Any, TYPE_CHECKING
 
 from superset import app
@@ -60,6 +61,8 @@ class QueryContextFactory:  # pylint: disable=too-few-public-methods
             datasource_model_instance = self._convert_to_model(datasource)
 
         slice_ = None
+        # if isinstance(form_data, str):
+        #     form_data = json.loads(form_data)
         if form_data and form_data.get("slice_id") is not None:
             slice_ = self._get_slice(form_data.get("slice_id"))
 

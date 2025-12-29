@@ -88,4 +88,59 @@ Handlebars.registerHelper('stringify', (obj: any, obj2: any) => {
   return isPlainObject(obj) ? JSON.stringify(obj) : String(obj);
 });
 
+//
+Handlebars.registerHelper('localeNumber', (number: any) =>
+  Number(number).toLocaleString('ru-RU'),
+);
+
+Handlebars.registerHelper(
+  'toMillions',
+  (number: any) => `${(number / 1000000).toFixed(2)} млн.`,
+);
+
+Handlebars.registerHelper('toShortened', (number: any) => {
+  if (Math.abs(number) >= 1000000)
+    return `${(number / 1000000).toFixed(2)} млн.`;
+  if (Math.abs(number) >= 1000) return `${(number / 1000).toFixed(2)} тыс.`;
+  return `${number.toFixed(2)}`;
+});
+
+Handlebars.registerHelper(
+  'toFixed',
+  (number: any, digits: number) => `${number.toFixed(digits)}`,
+);
+
+Handlebars.registerHelper('countTotalSum', (values: any, digits) => {
+  let sum: number;
+  sum = 0;
+  Object.values(values).forEach(function (value: number) {
+    const isNumber = typeof value === 'number';
+
+    if (isNumber) {
+      sum += value;
+    }
+  });
+  const isNumber = typeof sum === 'number';
+  if (isNumber) {
+    return sum.toFixed(digits);
+  }
+  return `NotANumber(${sum})`;
+});
+
+Handlebars.registerHelper(
+  'countTotalListSum',
+  (values: any, fieldName: string, digits) => {
+    let sum: number;
+    sum = 0;
+    values.forEach(function (value: any, idx: number) {
+      sum += value[fieldName];
+    });
+    const isNumber = (typeof sum) === 'number';
+    if (isNumber) {
+      return sum.toFixed(digits);
+    }
+    return `NotANumber(${sum})`;
+  },
+);
+
 Helpers.registerHelpers(Handlebars);

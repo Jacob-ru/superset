@@ -168,7 +168,7 @@ SUPERSET_WEBSERVER_TIMEOUT = int(timedelta(minutes=1).total_seconds())
 SUPERSET_DASHBOARD_PERIODICAL_REFRESH_LIMIT = 0
 SUPERSET_DASHBOARD_PERIODICAL_REFRESH_WARNING_MESSAGE = None
 
-SUPERSET_DASHBOARD_POSITION_DATA_LIMIT = 65535
+SUPERSET_DASHBOARD_POSITION_DATA_LIMIT = 65535 * 2
 CUSTOM_SECURITY_MANAGER = None
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 # ---------------------------------------------------------
@@ -428,7 +428,7 @@ DEFAULT_FEATURE_FLAGS: dict[str, bool] = {
     "DASHBOARD_CROSS_FILTERS": True,  # deprecated
     "DASHBOARD_VIRTUALIZATION": True,
     "GLOBAL_ASYNC_QUERIES": False,
-    "EMBEDDED_SUPERSET": False,
+    "EMBEDDED_SUPERSET": True,
     # Enables Alerts and reports new implementation
     "ALERT_REPORTS": False,
     "DASHBOARD_RBAC": False,
@@ -953,6 +953,9 @@ CELERY_CONFIG = CeleryConfig  # pylint: disable=invalid-name
 DEFAULT_HTTP_HEADERS: dict[str, Any] = {}
 OVERRIDE_HTTP_HEADERS: dict[str, Any] = {}
 HTTP_HEADERS: dict[str, Any] = {}
+
+ENABLE_CORS = False
+OVERRIDE_HTTP_HEADERS={"X-Frame-Options":"ALLOWALL"}
 
 # The db id here results in selecting this one as a default in SQL Lab
 DEFAULT_DB_ID = None

@@ -74,7 +74,7 @@ class ExportDatasetsCommand(ExportModelsCommand):
                         logger.info(
                             "Unable to decode `extra` field: %s", attributes["extra"]
                         )
-
+        payload["id"] = model.id
         payload["version"] = EXPORT_VERSION
         payload["database_uuid"] = str(model.database.uuid)
 

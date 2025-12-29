@@ -8800,9 +8800,8 @@ msgid "Last available value seen on %s"
 msgstr "Последнее доступное значение: %s"
 
 #: superset-frontend/src/explore/components/controls/DateFilterControl/utils/constants.ts:39
-#, fuzzy
 msgid "Last day"
-msgstr "последний день"
+msgstr "Последний день"
 
 #: superset-frontend/src/components/MetadataBar/ContentConfig.tsx:80
 #: superset-frontend/src/pages/AlertReportList/index.tsx:328
@@ -8819,28 +8818,24 @@ msgid "Last modified"
 msgstr "Последнее изменение"
 
 #: superset-frontend/src/explore/components/controls/DateFilterControl/utils/constants.ts:41
-#, fuzzy
 msgid "Last month"
-msgstr "последний месяц"
+msgstr "Последний месяц"
 
 #: superset-frontend/src/explore/components/controls/DateFilterControl/utils/constants.ts:42
-#, fuzzy
 msgid "Last quarter"
-msgstr "последний квартал"
+msgstr "Последний квартал"
 
 #: superset-frontend/src/pages/AlertReportList/index.tsx:269
 msgid "Last run"
 msgstr "Последнее изменение"
 
 #: superset-frontend/src/explore/components/controls/DateFilterControl/utils/constants.ts:40
-#, fuzzy
 msgid "Last week"
-msgstr "последняя неделя"
+msgstr "Последняя неделя"
 
 #: superset-frontend/src/explore/components/controls/DateFilterControl/utils/constants.ts:43
-#, fuzzy
 msgid "Last year"
-msgstr "последний год"
+msgstr "Последний год"
 
 #: superset-frontend/plugins/legacy-plugin-chart-map-box/src/controlPanel.ts:60
 #: superset-frontend/src/explore/components/controls/SpatialControl.jsx:178
@@ -8960,7 +8955,6 @@ msgid "Legend type"
 msgstr "Тип легенды"
 
 #: superset-frontend/src/explore/constants.ts:62
-#, fuzzy
 msgid "Less or equal (<=)"
 msgstr "<= (меньше или равно)"
 
@@ -8986,7 +8980,6 @@ msgid "Like"
 msgstr ""
 
 #: superset-frontend/src/explore/constants.ts:74
-#, fuzzy
 msgid "Like (case insensitive)"
 msgstr "Фильтровать значения (зависит от регистра)"
 
@@ -9181,7 +9174,7 @@ msgstr "Загрузка..."
 #: superset-frontend/src/dashboard/components/nativeFilters/FilterBar/CrossFilters/CrossFilterTitle.tsx:82
 #, fuzzy
 msgid "Locate the chart"
-msgstr "создать новый график"
+msgstr "Определить расположение графика"
 
 #: superset-frontend/plugins/legacy-plugin-chart-partition/src/controlPanel.tsx:196
 msgid "Log Scale"
@@ -9206,9 +9199,8 @@ msgstr "Логарифмическая шкала для вторичной ос
 
 #: superset-frontend/plugins/plugin-chart-echarts/src/Bubble/controlPanel.tsx:164
 #: superset-frontend/plugins/plugin-chart-echarts/src/Bubble/controlPanel.tsx:167
-#, fuzzy
 msgid "Logarithmic x-axis"
-msgstr "Логарифмическая ось Y"
+msgstr "Логарифмическая ось X"
 
 #: superset-frontend/plugins/plugin-chart-echarts/src/Bubble/controlPanel.tsx:228
 #: superset-frontend/plugins/plugin-chart-echarts/src/Bubble/controlPanel.tsx:231
@@ -20321,3 +20313,4 @@ msgstr "год"
 #: superset-frontend/plugins/plugin-chart-echarts/src/Timeseries/transformProps.ts:578
 msgid "zoom area"
 msgstr ""
+

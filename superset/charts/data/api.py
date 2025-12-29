@@ -236,6 +236,10 @@ class ChartDataRestApi(ChartRestApi):
             return self.response_400(message=_("Request is not JSON"))
 
         try:
+            if 'queries' in json_body:
+                for query_info in json_body['queries']:
+                    if 'extras' in query_info:
+                        query_info['extras'].pop('time_range_endpoints', None)
             query_context = self._create_query_context_from_form(json_body)
             command = ChartDataCommand(query_context)
             command.validate()

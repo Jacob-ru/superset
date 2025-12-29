@@ -17,6 +17,7 @@
 
 import copy
 import json
+import uuid
 from inspect import isclass
 from typing import Any
 
@@ -49,7 +50,10 @@ def import_chart(
     ignore_permissions: bool = False,
 ) -> Slice:
     can_write = ignore_permissions or security_manager.can_access("can_write", "Chart")
-    existing = db.session.query(Slice).filter_by(uuid=config["uuid"]).first()
+    existing = db.session.query(Slice)\
+        .filter_by(slice_name=config["slice_name"],
+                   datasource_id=config["datasource_id"])\
+        .first()
     if existing:
         if overwrite and can_write and get_user():
             if not security_manager.can_access_chart(existing):
@@ -60,11 +64,14 @@ def import_chart(
         if not overwrite or not can_write:
             return existing
         config["id"] = existing.id
+        config["uuid"] = str(existing.uuid)
     elif not can_write:
         raise ImportFailedError(
             "Chart doesn't exist and user doesn't have permission to create charts"
         )
 
+    if not existing:
+        config['uuid'] = uuid.uuid4().hex
     filter_chart_annotations(config)
 
     # TODO (betodealmeida): move this logic to import_from_dict
@@ -96,6 +103,16 @@ def migrate_chart(config: dict[str, Any]) -> dict[str, Any]:
     }
 
     output = copy.deepcopy(config)
+
+    # also update `query_context`
+    try:
+        query_context = json.loads(output.get("query_context") or "{}")
+        if "datasource" in query_context:
+            query_context["datasource"]["id"] = config["datasource_id"]
+        output["query_context"] = json.dumps(query_context)
+    except (json.decoder.JSONDecodeError, TypeError):
+        pass
+
     if config["viz_type"] not in migrators:
         return output
 
@@ -114,13 +131,16 @@ def migrate_chart(config: dict[str, Any]) -> dict[str, Any]:
         }
     )
 
+
     # also update `query_context`
     try:
         query_context = json.loads(output.get("query_context") or "{}")
     except (json.decoder.JSONDecodeError, TypeError):
         query_context = {}
     if "form_data" in query_context:
-        query_context["form_data"] = output["params"]
+        query_context["form_data"] = json.loads(output["params"])
+        if "datasource" in query_context:
+            query_context["datasource"]["id"] = config["datasource_id"]
         output["query_context"] = json.dumps(query_context)
 
     return output

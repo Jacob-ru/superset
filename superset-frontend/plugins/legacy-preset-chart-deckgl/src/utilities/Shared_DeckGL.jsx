@@ -380,6 +380,7 @@ export const mapboxStyle = {
       ['mapbox://styles/mapbox/satellite-streets-v9', t('Satellite Streets')],
       ['mapbox://styles/mapbox/satellite-v9', t('Satellite')],
       ['mapbox://styles/mapbox/outdoors-v9', t('Outdoors')],
+      ['mapbox://styles/medbi/clzo0nr08007u01qx3036asmq', t('Medbi')],
     ],
     default: 'mapbox://styles/mapbox/light-v9',
     description: t(
