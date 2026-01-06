@@ -255,11 +255,12 @@ class MedbiImportDashboardsCommand(ImportModelsCommand):
         self.clickhouse_database_id = clickhouse_database_id
         super(MedbiImportDashboardsCommand, self).__init__(contents, **kwargs)
 
-    # pylint: disable=too-many-branches, too-many-locals
+    # ruff: noqa: C901
     def _import(
         self,
         configs: dict[str, Any],
-        overwrite: bool = False
+        overwrite: bool = False,
+        contents: dict[str, Any] | None = None,
     ) -> None:
         # discover charts and datasets associated with dashboards
         chart_uuids: set[str] = set()

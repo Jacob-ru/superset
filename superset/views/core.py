@@ -385,26 +385,11 @@ class Superset(BaseSupersetView):
                 success = True
             except DatabaseNotFoundError as ex:
                 logger.exception(ex)
-                flash(
-                    _(
-                        "Cannot import dashboard: %(db_error)s.\n"
-                        "Make sure to create the database before "
-                        "importing the dashboard.",
-                        db_error=ex,
-                    ),
-                    "danger",
-                )
+                raise ex
             except Exception as ex:  # pylint: disable=broad-except
                 logger.exception(ex)
-                flash(
-                    _(
-                        "An unknown error occurred. "
-                        "Please contact your Superset administrator"
-                    ),
-                    "danger",
-                )
+                raise ex
             if success:
-                flash("Dashboard(s) have been imported", "success")
                 return redirect("/dashboard/list/")
 
         base_db_query = db.session.query(Database)
