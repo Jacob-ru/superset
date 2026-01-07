@@ -17,19 +17,14 @@
  * under the License.
  */
 import {
-  // eslint-disable-next-line
   timeFormatLocale,
-  // eslint-disable-next-line
   TimeLocaleDefinition,
-  // eslint-disable-next-line
   timeFormat,
-  // eslint-disable-next-line
   utcFormat,
 } from 'd3-time-format';
 import { utcUtils, localTimeUtils } from '../utils/d3Time';
 import TimeFormatter from '../TimeFormatter';
 
-// eslint-disable-next-line
 var d3 = typeof require === 'function' ? require('d3') : window.d3;
 
 type FormatsByStep = Partial<{
