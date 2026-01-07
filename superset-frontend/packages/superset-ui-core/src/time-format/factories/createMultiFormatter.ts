@@ -25,6 +25,8 @@ import {
 import { utcUtils, localTimeUtils } from '../utils/d3Time';
 import TimeFormatter from '../TimeFormatter';
 
+var d3 = require('d3');
+
 type FormatsByStep = Partial<{
   millisecond: string;
   second: string;
@@ -61,24 +63,34 @@ export default function createMultiFormatter({
     month = '%B',
     year = '%Y',
   } = formats;
+  console.log('smart date formatter')
+  // MEDBI: Локализация для русского языка в названии месяцев //
+  const ru_RU = {
+      "decimal": ",",
+      "thousands": "\xa0",
+      "grouping": [3],
+      "currency": ["", " руб."],
+      "dateTime": "%A, %e %B %Y г. %X",
+      "date": "%d.%m.%Y",
+      "time": "%H:%M:%S",
+      "periods": ["AM", "PM"],
+      "days": ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"],
+      "shortDays": ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+      "months": ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
+      "shortMonths": ["Янв", "Фев", "Март", "Апр", "Май", "Июнь", "Июль", "Авг", "Сен", "Окт", "Нояб", "Дек"]
+  };
+  const timeFormat = d3.locale(ru_RU).timeFormat;
+  const utcFormat = timeFormat;
 
-  let formatFunc;
-
-  if (typeof locale === 'undefined') {
-    formatFunc = useLocalTime ? timeFormat : utcFormat;
-  } else {
-    const formatLocale = timeFormatLocale(locale);
-    formatFunc = useLocalTime ? formatLocale.format : formatLocale.utcFormat;
-  }
-
-  const formatMillisecond = formatFunc(millisecond);
-  const formatSecond = formatFunc(second);
-  const formatMinute = formatFunc(minute);
-  const formatHour = formatFunc(hour);
-  const formatDay = formatFunc(day);
-  const formatFirstDayOfWeek = formatFunc(week);
-  const formatMonth = formatFunc(month);
-  const formatYear = formatFunc(year);
+  const format = useLocalTime ? timeFormat : utcFormat;
+  const formatMillisecond = format(millisecond);
+  const formatSecond = format(second);
+  const formatMinute = format(minute);
+  const formatHour = format(hour);
+  const formatDay = format(day);
+  const formatFirstDayOfWeek = format(week);
+  const formatMonth = format(month);
+  const formatYear = format(year);
 
   const {
     hasMillisecond,

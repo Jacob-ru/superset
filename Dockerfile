@@ -297,3 +297,9 @@ USER root
 RUN uv pip install .[duckdb]
 USER superset
 CMD ["/app/docker/entrypoints/docker-ci.sh"]
+
+
+FROM dev as medbi
+COPY ./docker/requirements-local.txt/ /app/requirements/
+RUN ls /app/requirements/
+RUN pip install -r /app/requirements/requirements-local.txt

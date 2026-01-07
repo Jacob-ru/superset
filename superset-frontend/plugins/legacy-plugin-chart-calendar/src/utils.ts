@@ -26,5 +26,6 @@ export const getFormattedUTCTime = (
 ) => {
   const date = new Date(ts);
   const offset = date.getTimezoneOffset() * 60 * 1000;
+  console.log(ts, timeFormat, getTimeFormatter(timeFormat))
   return getTimeFormatter(timeFormat)(date.getTime() - offset);
 };

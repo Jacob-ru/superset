@@ -16,7 +16,8 @@
 # under the License.
 
 import logging
-from typing import Any
+import uuid
+from typing import Any, Optional
 
 from superset import db, security_manager
 from superset.commands.exceptions import ImportFailedError
@@ -195,18 +196,19 @@ def import_dashboard(  # noqa: C901
     config: dict[str, Any],
     overwrite: bool = False,
     ignore_permissions: bool = False,
+    created_by_fk: Optional[int] = None,
 ) -> Dashboard:
     can_write = ignore_permissions or security_manager.can_access(
         "can_write",
         "Dashboard",
     )
-    existing = db.session.query(Dashboard).filter_by(uuid=config["uuid"]).first()
-    user = get_user()
+    existing_qs = db.session.query(Dashboard).filter_by(dashboard_title=config["dashboard_title"])
+    if created_by_fk:
+        existing_qs = existing_qs.filter_by(created_by_fk=created_by_fk)
+    existing = existing_qs.first()
     if existing:
-        if overwrite and can_write and user:
-            if not security_manager.can_access_dashboard(existing) or (
-                user not in existing.owners and not security_manager.is_admin()
-            ):
+        if overwrite and can_write and get_user():
+            if not security_manager.can_access_dashboard(existing):
                 raise ImportFailedError(
                     "A dashboard already exists and user doesn't "
                     "have permissions to overwrite it"
@@ -214,12 +216,15 @@ def import_dashboard(  # noqa: C901
         elif not overwrite or not can_write:
             return existing
         config["id"] = existing.id
+        config["uuid"] = str(existing.uuid)
     elif not can_write:
         raise ImportFailedError(
             "Dashboard doesn't exist and user doesn't "
             "have permission to create dashboards"
         )
 
+    if not existing:
+        config['uuid'] = uuid.uuid4().hex
     # TODO (betodealmeida): move this logic to import_from_dict
     config = config.copy()
 

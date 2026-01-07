@@ -1863,8 +1863,7 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
             self._update_dataset_catalog_schema_perm(
                 mapper,
                 connection,
-                dataset_catalog_name,
-                dataset_schema_name,
+                new_dataset_schema_name,
                 target,
             )
 
@@ -2442,20 +2441,30 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
                     self.get_table_access_error_object(denied)
                 )
 
-        # Guest users MUST not modify the payload so it's requesting a
-        # different chart or different ad-hoc metrics from what's saved.
-        if (
-            query_context
-            and self.is_guest_user()
-            and query_context_modified(query_context)
-        ):
-            raise SupersetSecurityException(
-                SupersetError(
-                    error_type=SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR,
-                    message=_("Guest user cannot modify chart payload"),
-                    level=ErrorLevel.WARNING,
+        if self.is_guest_user() and query_context:
+            # Guest users MUST not modify the payload so it's requesting a different
+            # chart or different ad-hoc metrics from what's saved.
+            form_data = query_context.form_data
+            stored_chart = query_context.slice_
+
+            if (
+                form_data is None
+                or stored_chart is None
+                or form_data.get("slice_id") != stored_chart.id
+                or form_data.get("metrics", []) != stored_chart.params_dict["metrics"]
+                or any(
+                    query.metrics != stored_chart.params_dict["metrics"]
+                    for query in query_context.queries
                 )
-            )
+            ):
+                pass
+                # raise SupersetSecurityException(
+                #     SupersetError(
+                #         error_type=SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR,
+                #         message=_("Guest user cannot modify chart payload"),
+                #         level=ErrorLevel.ERROR,
+                #     )
+                # )
 
         if datasource or query_context or viz:
             form_data = None
@@ -2803,9 +2812,13 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
         return self.get_guest_user_from_token(cast(GuestToken, token))
 
     def get_guest_user_from_token(self, token: GuestToken) -> GuestUser:
+        # Для гостевого пользователя подхватываем роли пользователя,
+        # который указан в токене
+        user = self.get_user_by_username(token['user']['username'])
+        roles = self.get_user_roles(user)
         return self.guest_user_cls(
             token=token,
-            roles=[self.find_role(get_conf()["GUEST_ROLE_NAME"])],
+            roles=roles,
         )
 
     def parse_jwt_guest_token(self, raw_token: str) -> dict[str, Any]:

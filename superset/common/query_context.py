@@ -87,8 +87,9 @@ class QueryContext:
         self,
         df: pd.DataFrame,
         coltypes: list[GenericDataType],
+        slice_name: str | None = None,
     ) -> str | list[dict[str, Any]]:
-        return self._processor.get_data(df, coltypes)
+        return self._processor.get_data(df, coltypes, slice_name=slice_name)
 
     def get_payload(
         self,
