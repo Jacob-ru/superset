@@ -62,6 +62,7 @@ export const DEFAULT_DECKGL_TILES = [
   ['mapbox://styles/mapbox/satellite-streets-v9', 'Satellite Streets (Mapbox)'],
   ['mapbox://styles/mapbox/satellite-v9', 'Satellite (Mapbox)'],
   ['mapbox://styles/mapbox/outdoors-v9', 'Outdoors (Mapbox)'],
+  ['mapbox://styles/medbi/clzo0nr08007u01qx3036asmq', 'Medbi'],
 ];
 
 const getDeckGLTiles = () => {

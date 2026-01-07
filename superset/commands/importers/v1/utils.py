@@ -196,6 +196,10 @@ def load_configs(
 
                     config["data"] = normalize_example_data_url(config["data"])
 
+                # По невыясненной пока причине template_params может быть пустой строкой
+                # заменим на None
+                if config.get('template_params') == "":
+                    config['template_params'] = None
                 schema.load(config)
                 configs[file_name] = config
             except ValidationError as exc:

@@ -230,7 +230,7 @@ class QueryContextProcessor:
         return self._qc_datasource.get_query_result(query_object)
 
     def get_data(
-        self, df: pd.DataFrame, coltypes: list[GenericDataType]
+        self, df: pd.DataFrame, coltypes: list[GenericDataType], slice_name: str | None = None
     ) -> str | list[dict[str, Any]]:
         if self._query_context.result_format in ChartDataResultFormat.table_like():
             include_index = not isinstance(df.index, pd.RangeIndex)
@@ -246,7 +246,13 @@ class QueryContextProcessor:
                 )
             elif self._query_context.result_format == ChartDataResultFormat.XLSX:
                 excel.apply_column_types(df, coltypes)
-                result = excel.df_to_excel(df, **current_app.config["EXCEL_EXPORT"])
+                from_date = self._query_context.queries[0].from_dttm
+                to_date = self._query_context.queries[0].to_dttm
+                result = excel.df_to_excel(df,
+                                           from_date=from_date,
+                                           to_date=to_date,
+                                           slice_name=slice_name,
+                                           **current_app.config["EXCEL_EXPORT"])
             return result or ""
 
         return df.to_dict(orient="records")

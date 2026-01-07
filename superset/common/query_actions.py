@@ -103,7 +103,8 @@ def _get_full(
         payload["colnames"] = list(df.columns)
         payload["indexnames"] = list(df.index)
         payload["coltypes"] = extract_dataframe_dtypes(df, datasource)
-        payload["data"] = query_context.get_data(df, payload["coltypes"])
+        slice_name = query_context.slice_.slice_name if query_context.slice_ else None
+        payload["data"] = query_context.get_data(df, payload["coltypes"], slice_name=slice_name)
         payload["result_format"] = query_context.result_format
     del payload["df"]
 
