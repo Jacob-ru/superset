@@ -25,7 +25,7 @@ import {
 import { utcUtils, localTimeUtils } from '../utils/d3Time';
 import TimeFormatter from '../TimeFormatter';
 
-var d3 = typeof require === 'function' ? require('d3') : window.d3;
+var d3 = require('d3');
 
 type FormatsByStep = Partial<{
   millisecond: string;
