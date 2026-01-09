@@ -7132,14 +7132,12 @@ msgstr "Экспорт в .JSON"
 
 #: superset-frontend/src/dashboard/components/SliceHeaderControls/index.tsx:528
 #: superset-frontend/src/explore/components/useExploreAdditionalActionsMenu/index.jsx:366
-#, fuzzy
 msgid "Export to Excel"
-msgstr "Экспорт в YAML"
+msgstr "Экспорт в Excel"
 
 #: superset-frontend/src/dashboard/components/Header/HeaderActionsDropdown/index.jsx:298
-#, fuzzy
 msgid "Export to PDF"
-msgstr "Экспорт в YAML"
+msgstr "Экспорт в PDF"
 
 #: superset/views/base.py:591
 msgid "Export to YAML"
@@ -7154,9 +7152,8 @@ msgid "Export to full .CSV"
 msgstr "Экспорт в целый .CSV"
 
 #: superset-frontend/src/dashboard/components/SliceHeaderControls/index.tsx:545
-#, fuzzy
 msgid "Export to full Excel"
-msgstr "Экспорт в YAML"
+msgstr "Экспорт в полный Excel"
 
 #: superset-frontend/src/explore/components/useExploreAdditionalActionsMenu/index.jsx:331
 msgid "Export to original .CSV"
