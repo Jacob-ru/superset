@@ -136,6 +136,9 @@ def import_dataset(  # noqa: C901
     if database and 'clickhouse' in database.sqlalchemy_uri:
         config['schema'] = database.url_object.database
 
+    if config.get('catalog'):
+        config['catalog'] = database.url_object.database
+
     # TODO (betodealmeida): move this logic to import_from_dict
     config = config.copy()
     for key in JSON_KEYS:
