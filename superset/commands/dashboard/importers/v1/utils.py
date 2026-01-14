@@ -225,6 +225,11 @@ def import_dashboard(  # noqa: C901
 
     if not existing:
         config['uuid'] = uuid.uuid4().hex
+        # slug в данном случае как и uuid уникальным идентификатором, поэтому если
+        # передано, то принудительно обнулим
+        if config.get('slug'):
+            config['slug'] = None
+
     # TODO (betodealmeida): move this logic to import_from_dict
     config = config.copy()
 
