@@ -14579,7 +14579,7 @@ msgstr "предыдущий календарный месяц"
 
 #, fuzzy
 msgid "previous calendar quarter"
-msgstr "предыдущий календарный год"
+msgstr "предыдущий календарный квартал"
 
 msgid "previous calendar week"
 msgstr "предыдущая календарная неделя"
