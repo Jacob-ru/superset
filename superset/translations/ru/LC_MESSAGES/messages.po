@@ -14577,7 +14577,6 @@ msgstr "Пиксели"
 msgid "previous calendar month"
 msgstr "предыдущий календарный месяц"
 
-#, fuzzy
 msgid "previous calendar quarter"
 msgstr "предыдущий календарный квартал"
 
