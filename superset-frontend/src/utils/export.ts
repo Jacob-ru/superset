@@ -50,7 +50,7 @@ export default async function handleResourceExport(
   done: () => void,
 ): Promise<void> {
   const endpoint = ensureAppRoot(
-    `/api/v1/${resource}/export/?q=${rison.encode(ids)}`,
+    `/api/v1/${resource}/export/?q=${rison.encode(ids)}&t=${(new Date()).getTime()}`,
   );
 
   try {
