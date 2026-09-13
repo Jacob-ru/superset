@@ -539,7 +539,7 @@ class QueryContextProcessor:
         return result
 
     def get_data(
-        self, df: pd.DataFrame, coltypes: list[GenericDataType]
+        self, df: pd.DataFrame, coltypes: list[GenericDataType], slice_name: str | None = None
     ) -> str | bytes | list[dict[str, Any]]:
         if self._query_context.result_format == ChartDataResultFormat.ARROW:
             return self._to_arrow_ipc(df)
@@ -563,9 +563,14 @@ class QueryContextProcessor:
                 )
             elif self._query_context.result_format == ChartDataResultFormat.XLSX:
                 excel.apply_column_types(df, coltypes)
-                result = excel.df_to_excel(
-                    df, index=include_index, **current_app.config["EXCEL_EXPORT"]
-                )
+                from_date = self._query_context.queries[0].from_dttm
+                to_date = self._query_context.queries[0].to_dttm
+                result = excel.df_to_excel(df,
+                                           index=include_index,
+                                           from_date=from_date,
+                                           to_date=to_date,
+                                           slice_name=slice_name,
+                                           **current_app.config["EXCEL_EXPORT"])
             return result or ""
 
         return df.to_dict(orient="records")

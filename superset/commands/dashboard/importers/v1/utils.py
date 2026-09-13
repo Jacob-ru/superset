@@ -16,7 +16,8 @@
 # under the License.
 
 import logging
-from typing import Any
+import uuid
+from typing import Any, Optional
 
 from superset import db, security_manager
 from superset.commands.exceptions import ImportFailedError
@@ -282,6 +283,7 @@ def import_dashboard(  # noqa: C901
     overwrite: bool = False,
     ignore_permissions: bool = False,
     default_viewers: list[Subject] | None = None,
+    created_by_fk: Optional[int] = None,
 ) -> Dashboard:
     """Import a dashboard from a config dict, handling existing matches.
 
@@ -327,6 +329,7 @@ def import_dashboard(  # noqa: C901
     # overwrite branches below are intentionally skipped because the caller has
     # already established trust at the command level.
     user = get_user()
+    # TODO: Поиск нужен по названию дашборда
     existing = find_existing_for_import(Dashboard, config["uuid"])
     if not existing and (incoming_slug := config.get("slug")) is not None:
         # ``Dashboard.import_from_dict`` matches an existing row on any of the
@@ -428,6 +431,8 @@ def import_dashboard(  # noqa: C901
                 existing.slug = config["slug"]
             db.session.flush()
             config["id"] = existing.id
+            # TODO: Проверить актуальность
+            config["uuid"] = str(existing.uuid)
         else:
             # OVERWRITE path — existing alive row. Without ``overwrite`` or
             # write permission, return it unchanged (the pre-soft-delete
@@ -446,11 +451,20 @@ def import_dashboard(  # noqa: C901
                     "permissions to overwrite it"
                 )
             config["id"] = existing.id
+            # TODO: Проверить актуальность
+            config["uuid"] = str(existing.uuid)
     elif not can_write:
         raise ImportFailedError(
             "Dashboard doesn't exist and user doesn't "
             "have permission to create dashboards"
         )
+
+    if not existing:
+        config['uuid'] = uuid.uuid4().hex
+        # slug в данном случае как и uuid уникальным идентификатором, поэтому если
+        # передано, то принудительно обнулим
+        if config.get('slug'):
+            config['slug'] = None
 
     # TODO (betodealmeida): move this logic to import_from_dict
     config = config.copy()

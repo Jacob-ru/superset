@@ -17,6 +17,8 @@
 import gzip
 import io
 import ipaddress
+import uuid
+import json
 import logging
 import os
 import re
@@ -318,6 +320,13 @@ def import_dataset(  # noqa: C901
     is_soft_deleted_match = False
 
     existing = find_existing_for_import(SqlaTable, config["uuid"])
+    # TODO: Старая логика такая: проверить что новая соответствует
+    # database = db.session.query(Database).filter_by(id=config["database_id"]).first()
+    # existing = db.session.query(SqlaTable)\
+    #     .filter_by(table_name=config['table_name'],
+    #                database_id=config["database_id"])\
+    #     .first()
+
     if not existing and can_write:
         # A fresh UUID over the (database, catalog, schema, table) identity of
         # an existing dataset is still matched-and-updated by
@@ -411,6 +420,8 @@ def import_dataset(  # noqa: C901
             db.session.flush()
             is_soft_deleted_match = True
             config["id"] = existing.id
+            # TODO: Перепроверить
+            config["uuid"] = str(existing.uuid)
         else:
             # OVERWRITE path — existing alive row. Without ``overwrite`` or
             # write permission, return it unchanged (the pre-soft-delete
@@ -451,6 +462,8 @@ def import_dataset(  # noqa: C901
                     "other dataset, or change this upload's table name."
                 )
             config["id"] = existing.id
+            # TODO: Перепроверить
+            config["uuid"] = str(existing.uuid)
 
     elif not can_write:
         raise ImportFailedError(
@@ -481,11 +494,21 @@ def import_dataset(  # noqa: C901
                 "references the same physical table; restore that dataset "
                 "instead of importing a duplicate"
             )
+        # TODO: Проверить актуальность
+        config["uuid"] = uuid.uuid4().hex
 
     # Trusted imports (e.g. example loading) carry curated configs; only
     # untrusted user imports validate the catalog, like the access checks below.
     if not ignore_permissions:
         validate_catalog(config)
+
+    # TODO: Проверить что 4 строки ниже актуальны
+    if database and 'clickhouse' in database.sqlalchemy_uri:
+        config['schema'] = database.url_object.database
+
+    if config.get('catalog'):
+        config['catalog'] = database.url_object.database
+
 
     # TODO (betodealmeida): move this logic to import_from_dict
     config = config.copy()

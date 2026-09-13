@@ -16,6 +16,8 @@
 # under the License.
 
 import copy
+import json
+import uuid
 from inspect import isclass
 from typing import Any
 
@@ -180,6 +182,15 @@ def import_chart(
     # already established trust at the command level.
     user = get_user()
 
+    # TODO: Поиск должен быть по названию слайса и ид сорса
+    # existing = db.session.query(Slice)\
+    #     .filter_by(slice_name=config["slice_name"],
+    #                datasource_id=config["datasource_id"])\
+    #     .first()
+
+    # TODO: Где-то потерелось переназначение ид и uuid
+    # config["id"] = existing.id
+    # config["uuid"] = str(existing.uuid)
     if existing := find_existing_for_import(Slice, config["uuid"]):
         if existing_chart := _prepare_existing_chart_for_import(
             existing,
@@ -249,6 +260,16 @@ def migrate_chart(config: dict[str, Any]) -> dict[str, Any]:
     }
 
     output = copy.deepcopy(config)
+
+    # TODO: Проверить зачем это нужно
+    try:
+        query_context = json.loads(output.get("query_context") or "{}")
+        if "datasource" in query_context:
+            query_context["datasource"]["id"] = config["datasource_id"]
+        output["query_context"] = json.dumps(query_context)
+    except (json.decoder.JSONDecodeError, TypeError):
+        pass
+
     if config["viz_type"] not in migrators:
         return output
 
@@ -274,6 +295,8 @@ def migrate_chart(config: dict[str, Any]) -> dict[str, Any]:
         query_context = {}
     if "form_data" in query_context:
         query_context["form_data"] = params
+        if "datasource" in query_context:
+            query_context["datasource"]["id"] = config["datasource_id"]
         output["query_context"] = json.dumps(query_context)
 
     return output

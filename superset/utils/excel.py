@@ -18,6 +18,9 @@ import io
 from datetime import datetime
 from typing import Any, Optional
 
+from decimal import Decimal
+from typing import Any
+from pandas.io.formats.excel import ExcelCell
 import pandas as pd
 
 from superset.utils.core import GenericDataType
@@ -92,7 +95,7 @@ def quote_formulas(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def df_to_excel(
-    df: pd.DataFrame, number_format: Optional[str] = None, **kwargs: Any
+    df: pd.DataFrame, number_format: Optional[str] = None, from_date = None, to_date=None, slice_name: str = None, **kwargs: Any
 ) -> Any:
     """
     Serialize a DataFrame to an xlsx workbook.
@@ -109,7 +112,17 @@ def df_to_excel(
 
     # pylint: disable=abstract-class-instantiated
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, **kwargs)
+        if from_date and to_date:
+            period_text = f'Период: {from_date.date()} - {to_date.date()}'
+        else:
+            period_text = ""
+        graph_name = f"График: {slice_name}"
+        writer._write_cells(
+            [ExcelCell(col=0, row=0, val=period_text),
+                   ExcelCell(col=0, row=1, val=graph_name),],
+            sheet_name="Sheet1"
+        )
+        df.to_excel(writer, startrow=2, **kwargs)
 
         if number_format and writer.sheets:
             worksheet = next(iter(writer.sheets.values()))
